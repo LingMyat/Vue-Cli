@@ -8,7 +8,7 @@
           </div>
           <div class="card-body">
             <div class="input-group">
-              <input type="text" v-model="inputTask" class="form-control" />
+              <input type="text" v-model="inputTask" @change="addTodo" class="form-control" />
               <button
                 @click="addTodo"
                 class="btn btn-secondary"
@@ -25,15 +25,15 @@
           <div class="card-header">
             <h3>{{ title2 }}</h3>
           </div>
-          <div class="card-body">
-            <div class="">
+          <div class="card-body" >
+            <div class="" v-if="filterTasks.length == 0">
               <i
-                ><b>{{ text }}</b></i
+                ><b>There is no task here</b></i
               >
             </div>
-            <div v-for="(todo, index) in todos" :key="index">
-              <div class="d-flex gap-1">
-                <input type="checkbox" v-model="todo.done" id="" />
+            <div v-for="(todo, index) in filterTasks" :key="index" v-else>
+              <div class="d-flex gap-1 mb-2">
+                <input type="checkbox" v-model="todo.done" id="" @change="storeTodos"/>
                 <span :class="{ done: todo.done }" class="d-inline-block"
                   ><i>
                     {{ todo.task }}
@@ -44,6 +44,10 @@
                 </button>
               </div>
             </div>
+          </div>
+          <div class="card-footer">
+            <b><i>Hide Complete Tasks</i></b> <input type="checkbox" v-model="hideCompleteTasks">
+            <button class="btn btn-sm btn-primary float-end">Delete Complete Tasks</button>
           </div>
         </div>
       </div>
@@ -58,6 +62,7 @@ export default {
     title1: "Add Your Tasks",
     title2: "My Tasks",
     inputTask: "",
+    hideCompleteTasks:false,
     todos: [],
   }),
   methods: {
@@ -66,22 +71,35 @@ export default {
         task: this.inputTask,
         done: false,
       });
+      this.storeTodos();
       this.setDefault();
     },
     deleteTodo(index){
       this.todos.splice(index,1);
+      this.storeTodos();
+      
     },
     setDefault() {
       this.inputTask = "";
     },
+    storeTodos(){
+      localStorage.setItem('todoList',JSON.stringify(this.todos));
+    }
+  },
+  mounted(){
+    localStorage.getItem('todoList')==null?this.todos=[]:this.todos=JSON.parse(localStorage.getItem('todoList'));
   },
   computed: {
-    text() {
-      if (this.todos.length == 0) {
-        return "There is no task here";
+    filterTasks(){
+      // return this.hideCompleteTasks? this.todos.filter((v)=>!v.done) : this.todos;
+      if (this.hideCompleteTasks) {
+        let filterArr =  this.todos.filter(function(e){
+              return e.done == false;
+          });
+          return filterArr;
       }
-      return "";
-    },
+      return this.todos;
+    }
   },
 };
 </script>
